@@ -2,9 +2,9 @@
   "name": "linework",
   "version": "1.0.0",
   "description": "Site planning and linework application",
-  "main": "index.html",
+  "main": "public/index.html",
   "scripts": {
-    "dev": "npx http-server -p 8000 -o",
+    "dev": "npx http-server -p 8000 -o public/index.html",
     "start": "npx http-server -p 8000"
   },
   "keywords": [

@@ -1,6 +1,6 @@
 // Geometry utility functions for linework calculations
 
-class Point {
+export class Point {
     constructor(x, y, id = null) {
         this.x = x;
         this.y = y;
@@ -22,7 +22,7 @@ class Point {
     }
 }
 
-class Line {
+export class Line {
     constructor(start, end, id = null) {
         this.start = start; // Point object or {x, y}
         this.end = end;     // Point object or {x, y}
@@ -90,7 +90,7 @@ class Line {
     }
 }
 
-class Polyline {
+export class Polyline {
     constructor(points = [], id = null) {
         this.points = points; // Array of Point objects or {x, y}
         this.id = id || this.generateId();
@@ -129,7 +129,7 @@ class Polyline {
     }
 }
 
-class Dimension {
+export class Dimension {
     constructor(start, end, offset = 20, id = null) {
         this.start = start;
         this.end = end;
@@ -151,7 +151,7 @@ class Dimension {
     }
 }
 
-class Rectangle {
+export class Rectangle {
     constructor(corner1, corner2, id = null) {
         this.corner1 = corner1; // {x, y}
         this.corner2 = corner2; // {x, y}
@@ -196,7 +196,7 @@ class Rectangle {
     }
 }
 
-class Circle {
+export class Circle {
     constructor(center, radius, id = null) {
         this.center = center; // {x, y}
         this.radius = radius;
@@ -226,7 +226,7 @@ class Circle {
     }
 }
 
-class Arc {
+export class Arc {
     constructor(center, radius, startAngle, endAngle, id = null) {
         this.center = center; // {x, y}
         this.radius = radius;
@@ -294,7 +294,7 @@ class Arc {
 }
 
 // Geometric utility functions
-const Geometry = {
+export const Geometry = {
     // Calculate distance between two points
     distance(p1, p2) {
         return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));

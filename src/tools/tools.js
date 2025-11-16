@@ -1,6 +1,8 @@
 // Drawing and editing tools
 
-class ToolManager {
+import { Point, Line, Polyline, Dimension, Rectangle, Circle, Arc, Geometry } from '../core/geometry.js';
+
+export class ToolManager {
     constructor(canvas) {
         this.canvas = canvas;
         this.currentTool = 'select';

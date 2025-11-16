@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linework - Site Planning Tool</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../src/ui/styles.css">
 </head>
 <body>
     <div id="app">
@@ -118,10 +118,6 @@
     <!-- Hidden file input for loading projects -->
     <input type="file" id="fileInput" accept=".json,.dxf" style="display: none;">
 
-    <script src="geometry.js"></script>
-    <script src="export.js"></script>
-    <script src="tools.js"></script>
-    <script src="canvas.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="../src/main.js"></script>
 </body>
 </html>

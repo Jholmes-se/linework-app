@@ -1,6 +1,8 @@
 // Canvas rendering and interaction management
 
-class DrawingCanvas {
+import { Geometry, Line } from './geometry.js';
+
+export class DrawingCanvas {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');

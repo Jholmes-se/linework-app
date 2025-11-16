@@ -1,6 +1,10 @@
 // Main application logic
 
-class LineworkApp {
+import { DrawingCanvas } from './canvas.js';
+import { ToolManager } from '../tools/tools.js';
+import { ExportManager } from '../io/export.js';
+
+export class LineworkApp {
     constructor() {
         this.canvas = null;
         this.toolManager = null;
@@ -466,8 +470,3 @@ class LineworkApp {
         this.canvas.updateZoomDisplay();
     }
 }
-
-// Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.lineworkApp = new LineworkApp();
-});

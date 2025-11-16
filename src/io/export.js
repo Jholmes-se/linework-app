@@ -1,6 +1,8 @@
 // Export and Import functionality
 
-class ExportManager {
+import { Point, Line, Polyline, Rectangle, Circle, Arc, Dimension } from '../core/geometry.js';
+
+export class ExportManager {
     constructor() {
         this.version = '1.0';
     }
