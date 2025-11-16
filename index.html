@@ -27,6 +27,18 @@
                 <button class="tool-btn" data-tool="polyline" title="Draw Polyline (Shift+L)">
                     <span>⌇</span> Polyline
                 </button>
+                <button class="tool-btn" data-tool="rectangle" title="Draw Rectangle (R / Shift for Square)">
+                    <span>▭</span> Rectangle
+                </button>
+                <button class="tool-btn" data-tool="circle" title="Draw Circle (C)">
+                    <span>○</span> Circle
+                </button>
+                <button class="tool-btn" data-tool="arc" title="Draw Arc - 3 Points (A)">
+                    <span>◠</span> Arc
+                </button>
+                <button class="tool-btn" data-tool="offset" title="Offset Line (O)">
+                    <span>∥</span> Offset
+                </button>
                 <button class="tool-btn" data-tool="measure" title="Measure Distance (M)">
                     <span>↔</span> Measure
                 </button>
@@ -93,7 +105,10 @@
 
         <!-- Properties Panel -->
         <div id="properties-panel">
-            <h3>Properties</h3>
+            <div class="panel-header">
+                <h3>Properties</h3>
+                <button id="togglePanel" title="Toggle Panel">◀</button>
+            </div>
             <div id="propertiesContent">
                 <p class="empty-state">Select an object to edit properties</p>
             </div>

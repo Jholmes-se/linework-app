@@ -26,6 +26,23 @@ class ExportManager {
                 points: pl.points.map(p => ({ x: p.x, y: p.y })),
                 closed: pl.closed
             })),
+            rectangles: data.rectangles.map(r => ({
+                id: r.id,
+                corner1: { x: r.corner1.x, y: r.corner1.y },
+                corner2: { x: r.corner2.x, y: r.corner2.y }
+            })),
+            circles: data.circles.map(c => ({
+                id: c.id,
+                center: { x: c.center.x, y: c.center.y },
+                radius: c.radius
+            })),
+            arcs: data.arcs.map(a => ({
+                id: a.id,
+                center: { x: a.center.x, y: a.center.y },
+                radius: a.radius,
+                startAngle: a.startAngle,
+                endAngle: a.endAngle
+            })),
             dimensions: data.dimensions.map(d => ({
                 id: d.id,
                 start: { x: d.start.x, y: d.start.y },
@@ -41,13 +58,13 @@ class ExportManager {
         try {
             const data = JSON.parse(jsonString);
 
-            const points = data.points.map(p => new Point(p.x, p.y, p.id));
-            const lines = data.lines.map(l => new Line(
+            const points = (data.points || []).map(p => new Point(p.x, p.y, p.id));
+            const lines = (data.lines || []).map(l => new Line(
                 { x: l.start.x, y: l.start.y },
                 { x: l.end.x, y: l.end.y },
                 l.id
             ));
-            const polylines = data.polylines.map(pl => {
+            const polylines = (data.polylines || []).map(pl => {
                 const polyline = new Polyline(
                     pl.points.map(p => ({ x: p.x, y: p.y })),
                     pl.id
@@ -55,14 +72,31 @@ class ExportManager {
                 polyline.closed = pl.closed;
                 return polyline;
             });
-            const dimensions = data.dimensions.map(d => new Dimension(
+            const rectangles = (data.rectangles || []).map(r => new Rectangle(
+                { x: r.corner1.x, y: r.corner1.y },
+                { x: r.corner2.x, y: r.corner2.y },
+                r.id
+            ));
+            const circles = (data.circles || []).map(c => new Circle(
+                { x: c.center.x, y: c.center.y },
+                c.radius,
+                c.id
+            ));
+            const arcs = (data.arcs || []).map(a => new Arc(
+                { x: a.center.x, y: a.center.y },
+                a.radius,
+                a.startAngle,
+                a.endAngle,
+                a.id
+            ));
+            const dimensions = (data.dimensions || []).map(d => new Dimension(
                 { x: d.start.x, y: d.start.y },
                 { x: d.end.x, y: d.end.y },
                 d.offset,
                 d.id
             ));
 
-            return { points, lines, polylines, dimensions };
+            return { points, lines, polylines, rectangles, circles, arcs, dimensions };
         } catch (error) {
             console.error('Error importing JSON:', error);
             return null;

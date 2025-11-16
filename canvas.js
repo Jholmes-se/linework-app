@@ -10,6 +10,9 @@ class DrawingCanvas {
         this.lines = [];
         this.polylines = [];
         this.dimensions = [];
+        this.rectangles = [];
+        this.circles = [];
+        this.arcs = [];
 
         // View transformation
         this.offsetX = 0;
@@ -29,6 +32,10 @@ class DrawingCanvas {
         this.previewPolyline = null;
         this.previewDimension = null;
         this.previewMeasurement = null;
+        this.previewRectangle = null;
+        this.previewCircle = null;
+        this.previewArc = null;
+        this.previewOffsetLine = null;
 
         // Setup canvas
         this.resizeCanvas();
@@ -203,6 +210,44 @@ class DrawingCanvas {
             }
         }
 
+        // Check rectangles
+        for (const rectangle of this.rectangles) {
+            if (worldPos.x >= rectangle.x && worldPos.x <= rectangle.x + rectangle.width &&
+                worldPos.y >= rectangle.y && worldPos.y <= rectangle.y + rectangle.height) {
+                return rectangle;
+            }
+        }
+
+        // Check circles
+        for (const circle of this.circles) {
+            if (circle.distanceToPoint(worldPos) < worldThreshold) {
+                return circle;
+            }
+        }
+
+        // Check arcs
+        for (const arc of this.arcs) {
+            const dist = Math.sqrt(
+                Math.pow(worldPos.x - arc.center.x, 2) +
+                Math.pow(worldPos.y - arc.center.y, 2)
+            );
+            if (Math.abs(dist - arc.radius) < worldThreshold) {
+                // Check if point is within arc angle range
+                const angle = Math.atan2(worldPos.y - arc.center.y, worldPos.x - arc.center.x);
+                let startAngle = arc.startAngle;
+                let endAngle = arc.endAngle;
+
+                // Normalize angles
+                while (endAngle < startAngle) endAngle += 2 * Math.PI;
+                let checkAngle = angle;
+                while (checkAngle < startAngle) checkAngle += 2 * Math.PI;
+
+                if (checkAngle >= startAngle && checkAngle <= endAngle) {
+                    return arc;
+                }
+            }
+        }
+
         return null;
     }
 
@@ -211,6 +256,9 @@ class DrawingCanvas {
         this.lines.forEach(l => l.selected = false);
         this.polylines.forEach(pl => pl.selected = false);
         this.dimensions.forEach(d => d.selected = false);
+        this.rectangles.forEach(r => r.selected = false);
+        this.circles.forEach(c => c.selected = false);
+        this.arcs.forEach(a => a.selected = false);
     }
 
     moveSelected(dx, dy) {
@@ -247,6 +295,29 @@ class DrawingCanvas {
                 dimension.end.y += dy;
             }
         });
+
+        this.rectangles.forEach(rectangle => {
+            if (rectangle.selected) {
+                rectangle.corner1.x += dx;
+                rectangle.corner1.y += dy;
+                rectangle.corner2.x += dx;
+                rectangle.corner2.y += dy;
+            }
+        });
+
+        this.circles.forEach(circle => {
+            if (circle.selected) {
+                circle.center.x += dx;
+                circle.center.y += dy;
+            }
+        });
+
+        this.arcs.forEach(arc => {
+            if (arc.selected) {
+                arc.center.x += dx;
+                arc.center.y += dy;
+            }
+        });
     }
 
     deleteSelected() {
@@ -254,6 +325,9 @@ class DrawingCanvas {
         this.lines = this.lines.filter(l => !l.selected);
         this.polylines = this.polylines.filter(pl => !pl.selected);
         this.dimensions = this.dimensions.filter(d => !d.selected);
+        this.rectangles = this.rectangles.filter(r => !r.selected);
+        this.circles = this.circles.filter(c => !c.selected);
+        this.arcs = this.arcs.filter(a => !a.selected);
         this.render();
     }
 
@@ -274,12 +348,27 @@ class DrawingCanvas {
         this.dimensions.push(dimension);
     }
 
+    addRectangle(rectangle) {
+        this.rectangles.push(rectangle);
+    }
+
+    addCircle(circle) {
+        this.circles.push(circle);
+    }
+
+    addArc(arc) {
+        this.arcs.push(arc);
+    }
+
     // Clear all
     clearAll() {
         this.points = [];
         this.lines = [];
         this.polylines = [];
         this.dimensions = [];
+        this.rectangles = [];
+        this.circles = [];
+        this.arcs = [];
         this.render();
     }
 
@@ -304,12 +393,27 @@ class DrawingCanvas {
         this.drawAxes();
 
         // Draw all objects
+        this.drawRectangles();
+        this.drawCircles();
+        this.drawArcs();
         this.drawLines();
         this.drawPolylines();
         this.drawDimensions();
         this.drawPoints();
 
         // Draw preview objects
+        if (this.previewRectangle) {
+            this.drawPreviewRectangle(this.previewRectangle);
+        }
+        if (this.previewCircle) {
+            this.drawPreviewCircle(this.previewCircle);
+        }
+        if (this.previewArc) {
+            this.drawPreviewArc(this.previewArc);
+        }
+        if (this.previewOffsetLine) {
+            this.drawPreviewLine(this.previewOffsetLine);
+        }
         if (this.previewLine) {
             this.drawPreviewLine(this.previewLine);
         }
@@ -635,6 +739,178 @@ class DrawingCanvas {
         ctx.beginPath();
         ctx.arc(screen.x, screen.y, 6, 0, Math.PI * 2);
         ctx.stroke();
+    }
+
+    drawRectangles() {
+        const ctx = this.ctx;
+
+        this.rectangles.forEach(rectangle => {
+            const topLeft = this.worldToScreen(rectangle.x, rectangle.y);
+            const width = rectangle.width * this.zoom;
+            const height = rectangle.height * this.zoom;
+
+            ctx.strokeStyle = rectangle.selected ? '#4a9eff' : '#ffffff';
+            ctx.lineWidth = rectangle.selected ? 3 : 2;
+            ctx.beginPath();
+            ctx.rect(topLeft.x, topLeft.y, width, height);
+            ctx.stroke();
+
+            // Draw corner points
+            if (rectangle.selected) {
+                ctx.fillStyle = '#4a9eff';
+                [
+                    { x: rectangle.x, y: rectangle.y },
+                    { x: rectangle.x + rectangle.width, y: rectangle.y },
+                    { x: rectangle.x, y: rectangle.y + rectangle.height },
+                    { x: rectangle.x + rectangle.width, y: rectangle.y + rectangle.height }
+                ].forEach(corner => {
+                    const screen = this.worldToScreen(corner.x, corner.y);
+                    ctx.beginPath();
+                    ctx.arc(screen.x, screen.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+        });
+    }
+
+    drawCircles() {
+        const ctx = this.ctx;
+
+        this.circles.forEach(circle => {
+            const center = this.worldToScreen(circle.center.x, circle.center.y);
+            const radius = circle.radius * this.zoom;
+
+            ctx.strokeStyle = circle.selected ? '#4a9eff' : '#ffffff';
+            ctx.lineWidth = circle.selected ? 3 : 2;
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw center point
+            ctx.fillStyle = circle.selected ? '#4a9eff' : '#888';
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw radius line if selected
+            if (circle.selected) {
+                ctx.strokeStyle = '#4a9eff';
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(center.x, center.y);
+                ctx.lineTo(center.x + radius, center.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        });
+    }
+
+    drawArcs() {
+        const ctx = this.ctx;
+
+        this.arcs.forEach(arc => {
+            const center = this.worldToScreen(arc.center.x, arc.center.y);
+            const radius = arc.radius * this.zoom;
+
+            ctx.strokeStyle = arc.selected ? '#4a9eff' : '#ffffff';
+            ctx.lineWidth = arc.selected ? 3 : 2;
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, radius, arc.startAngle, arc.endAngle);
+            ctx.stroke();
+
+            // Draw center and endpoints
+            if (arc.selected) {
+                ctx.fillStyle = '#4a9eff';
+
+                // Center
+                ctx.beginPath();
+                ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Start point
+                const start = this.worldToScreen(arc.startPoint.x, arc.startPoint.y);
+                ctx.beginPath();
+                ctx.arc(start.x, start.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // End point
+                const end = this.worldToScreen(arc.endPoint.x, arc.endPoint.y);
+                ctx.beginPath();
+                ctx.arc(end.x, end.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+    }
+
+    drawPreviewRectangle(rectangle) {
+        const ctx = this.ctx;
+        const topLeft = this.worldToScreen(
+            Math.min(rectangle.corner1.x, rectangle.corner2.x),
+            Math.min(rectangle.corner1.y, rectangle.corner2.y)
+        );
+        const width = Math.abs(rectangle.corner2.x - rectangle.corner1.x) * this.zoom;
+        const height = Math.abs(rectangle.corner2.y - rectangle.corner1.y) * this.zoom;
+
+        ctx.strokeStyle = '#4a9eff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.rect(topLeft.x, topLeft.y, width, height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw dimensions
+        ctx.fillStyle = '#4a9eff';
+        ctx.font = '12px monospace';
+        const w = Math.abs(rectangle.corner2.x - rectangle.corner1.x);
+        const h = Math.abs(rectangle.corner2.y - rectangle.corner1.y);
+        ctx.fillText(`${w.toFixed(2)} × ${h.toFixed(2)}`, topLeft.x + 5, topLeft.y - 5);
+    }
+
+    drawPreviewCircle(circle) {
+        const ctx = this.ctx;
+        const center = this.worldToScreen(circle.center.x, circle.center.y);
+        const radius = circle.radius * this.zoom;
+
+        ctx.strokeStyle = '#4a9eff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Draw radius line
+        ctx.beginPath();
+        ctx.moveTo(center.x, center.y);
+        ctx.lineTo(center.x + radius, center.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw center
+        ctx.fillStyle = '#4a9eff';
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    drawPreviewArc(arc) {
+        const ctx = this.ctx;
+        const center = this.worldToScreen(arc.center.x, arc.center.y);
+        const radius = arc.radius * this.zoom;
+
+        ctx.strokeStyle = '#4a9eff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius, arc.startAngle, arc.endAngle);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw center
+        ctx.fillStyle = '#4a9eff';
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
+        ctx.fill();
     }
 
     setStatus(text) {

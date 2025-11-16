@@ -120,6 +120,43 @@ class LineworkApp {
         document.getElementById('fileInput').addEventListener('change', (e) => {
             this.handleFileLoad(e);
         });
+
+        // Toggle panel
+        const toggleBtn = document.getElementById('togglePanel');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                console.log('Toggle button clicked');
+                this.togglePropertiesPanel();
+            });
+        } else {
+            console.error('Toggle panel button not found!');
+        }
+    }
+
+    togglePropertiesPanel() {
+        const panel = document.getElementById('properties-panel');
+        const canvasContainer = document.getElementById('canvas-container');
+
+        if (panel) {
+            console.log('Toggling panel, current state:', panel.classList.contains('collapsed'));
+            panel.classList.toggle('collapsed');
+
+            // Also toggle the canvas container class
+            if (canvasContainer) {
+                canvasContainer.classList.toggle('panel-collapsed');
+            }
+
+            console.log('Panel toggled, new state:', panel.classList.contains('collapsed'));
+
+            // Resize the canvas after the animation completes
+            setTimeout(() => {
+                if (this.canvas) {
+                    this.canvas.resizeCanvas();
+                }
+            }, 300); // Match the CSS transition duration
+        } else {
+            console.error('Properties panel not found!');
+        }
     }
 
     setTool(toolName) {
@@ -138,6 +175,10 @@ class LineworkApp {
             point: 'Point tool active - Click to place points',
             line: 'Line tool active - Click two points to draw a line',
             polyline: 'Polyline tool active - Click to add points. Press Enter to close, Escape to finish',
+            rectangle: 'Rectangle tool active - Click two corners. Hold Shift for square',
+            circle: 'Circle tool active - Click center, then radius point',
+            arc: 'Arc tool active - Click three points to define arc',
+            offset: 'Offset tool active - Click a line, then click to set offset direction',
             measure: 'Measure tool active - Click two points to measure distance and angle',
             dimension: 'Dimension tool active - Click two points to add dimension annotation'
         };
@@ -171,6 +212,18 @@ class LineworkApp {
                     } else {
                         this.activateToolButton('line');
                     }
+                    break;
+                case 'r':
+                    this.activateToolButton('rectangle');
+                    break;
+                case 'c':
+                    this.activateToolButton('circle');
+                    break;
+                case 'a':
+                    this.activateToolButton('arc');
+                    break;
+                case 'o':
+                    this.activateToolButton('offset');
                     break;
                 case 'm':
                     this.activateToolButton('measure');
@@ -251,6 +304,9 @@ class LineworkApp {
             points: this.canvas.points,
             lines: this.canvas.lines,
             polylines: this.canvas.polylines,
+            rectangles: this.canvas.rectangles,
+            circles: this.canvas.circles,
+            arcs: this.canvas.arcs,
             dimensions: this.canvas.dimensions
         };
 
@@ -282,6 +338,9 @@ class LineworkApp {
                     this.canvas.points = imported.points;
                     this.canvas.lines = imported.lines;
                     this.canvas.polylines = imported.polylines;
+                    this.canvas.rectangles = imported.rectangles;
+                    this.canvas.circles = imported.circles;
+                    this.canvas.arcs = imported.arcs;
                     this.canvas.dimensions = imported.dimensions;
                     this.canvas.render();
                     this.canvas.setStatus('Project loaded successfully');
@@ -301,6 +360,9 @@ class LineworkApp {
             points: this.canvas.points,
             lines: this.canvas.lines,
             polylines: this.canvas.polylines,
+            rectangles: this.canvas.rectangles,
+            circles: this.canvas.circles,
+            arcs: this.canvas.arcs,
             dimensions: this.canvas.dimensions
         };
 
@@ -317,6 +379,9 @@ class LineworkApp {
             points: this.canvas.points,
             lines: this.canvas.lines,
             polylines: this.canvas.polylines,
+            rectangles: this.canvas.rectangles,
+            circles: this.canvas.circles,
+            arcs: this.canvas.arcs,
             dimensions: this.canvas.dimensions
         };
 
@@ -333,6 +398,9 @@ class LineworkApp {
             points: this.canvas.points,
             lines: this.canvas.lines,
             polylines: this.canvas.polylines,
+            rectangles: this.canvas.rectangles,
+            circles: this.canvas.circles,
+            arcs: this.canvas.arcs,
             dimensions: this.canvas.dimensions
         };
 
@@ -348,6 +416,9 @@ class LineworkApp {
         return this.canvas.points.length > 0 ||
                this.canvas.lines.length > 0 ||
                this.canvas.polylines.length > 0 ||
+               this.canvas.rectangles.length > 0 ||
+               this.canvas.circles.length > 0 ||
+               this.canvas.arcs.length > 0 ||
                this.canvas.dimensions.length > 0;
     }
 

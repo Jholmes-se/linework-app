@@ -151,6 +151,148 @@ class Dimension {
     }
 }
 
+class Rectangle {
+    constructor(corner1, corner2, id = null) {
+        this.corner1 = corner1; // {x, y}
+        this.corner2 = corner2; // {x, y}
+        this.id = id || this.generateId();
+        this.type = 'rectangle';
+        this.selected = false;
+    }
+
+    generateId() {
+        return 'rectangle_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    get x() {
+        return Math.min(this.corner1.x, this.corner2.x);
+    }
+
+    get y() {
+        return Math.min(this.corner1.y, this.corner2.y);
+    }
+
+    get width() {
+        return Math.abs(this.corner2.x - this.corner1.x);
+    }
+
+    get height() {
+        return Math.abs(this.corner2.y - this.corner1.y);
+    }
+
+    get center() {
+        return {
+            x: (this.corner1.x + this.corner2.x) / 2,
+            y: (this.corner1.y + this.corner2.y) / 2
+        };
+    }
+
+    perimeter() {
+        return 2 * (this.width + this.height);
+    }
+
+    area() {
+        return this.width * this.height;
+    }
+}
+
+class Circle {
+    constructor(center, radius, id = null) {
+        this.center = center; // {x, y}
+        this.radius = radius;
+        this.id = id || this.generateId();
+        this.type = 'circle';
+        this.selected = false;
+    }
+
+    generateId() {
+        return 'circle_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    circumference() {
+        return 2 * Math.PI * this.radius;
+    }
+
+    area() {
+        return Math.PI * this.radius * this.radius;
+    }
+
+    distanceToPoint(point) {
+        const dist = Math.sqrt(
+            Math.pow(point.x - this.center.x, 2) +
+            Math.pow(point.y - this.center.y, 2)
+        );
+        return Math.abs(dist - this.radius);
+    }
+}
+
+class Arc {
+    constructor(center, radius, startAngle, endAngle, id = null) {
+        this.center = center; // {x, y}
+        this.radius = radius;
+        this.startAngle = startAngle; // in radians
+        this.endAngle = endAngle;     // in radians
+        this.id = id || this.generateId();
+        this.type = 'arc';
+        this.selected = false;
+    }
+
+    generateId() {
+        return 'arc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // Create arc from three points
+    static fromThreePoints(p1, p2, p3, id = null) {
+        // Calculate center using perpendicular bisectors
+        const mid1 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+        const mid2 = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
+
+        const slope1 = (p2.y - p1.y) / (p2.x - p1.x);
+        const slope2 = (p3.y - p2.y) / (p3.x - p2.x);
+
+        if (Math.abs(slope1 - slope2) < 0.0001) {
+            // Points are collinear
+            return null;
+        }
+
+        const perpSlope1 = -1 / slope1;
+        const perpSlope2 = -1 / slope2;
+
+        // Find intersection of perpendicular bisectors
+        const centerX = (perpSlope1 * mid1.x - perpSlope2 * mid2.x + mid2.y - mid1.y) / (perpSlope1 - perpSlope2);
+        const centerY = perpSlope1 * (centerX - mid1.x) + mid1.y;
+
+        const center = { x: centerX, y: centerY };
+        const radius = Math.sqrt(Math.pow(p1.x - centerX, 2) + Math.pow(p1.y - centerY, 2));
+
+        // Calculate angles
+        const startAngle = Math.atan2(p1.y - centerY, p1.x - centerX);
+        const endAngle = Math.atan2(p3.y - centerY, p3.x - centerX);
+
+        return new Arc(center, radius, startAngle, endAngle, id);
+    }
+
+    arcLength() {
+        let angle = this.endAngle - this.startAngle;
+        if (angle < 0) angle += 2 * Math.PI;
+        return this.radius * angle;
+    }
+
+    get startPoint() {
+        return {
+            x: this.center.x + this.radius * Math.cos(this.startAngle),
+            y: this.center.y + this.radius * Math.sin(this.startAngle)
+        };
+    }
+
+    get endPoint() {
+        return {
+            x: this.center.x + this.radius * Math.cos(this.endAngle),
+            y: this.center.y + this.radius * Math.sin(this.endAngle)
+        };
+    }
+}
+
 // Geometric utility functions
 const Geometry = {
     // Calculate distance between two points
@@ -240,9 +382,42 @@ const Geometry = {
                     maxX = Math.max(maxX, p.x);
                     maxY = Math.max(maxY, p.y);
                 });
+            } else if (obj.type === 'rectangle') {
+                minX = Math.min(minX, obj.x);
+                minY = Math.min(minY, obj.y);
+                maxX = Math.max(maxX, obj.x + obj.width);
+                maxY = Math.max(maxY, obj.y + obj.height);
+            } else if (obj.type === 'circle') {
+                minX = Math.min(minX, obj.center.x - obj.radius);
+                minY = Math.min(minY, obj.center.y - obj.radius);
+                maxX = Math.max(maxX, obj.center.x + obj.radius);
+                maxY = Math.max(maxY, obj.center.y + obj.radius);
+            } else if (obj.type === 'arc') {
+                minX = Math.min(minX, obj.center.x - obj.radius);
+                minY = Math.min(minY, obj.center.y - obj.radius);
+                maxX = Math.max(maxX, obj.center.x + obj.radius);
+                maxY = Math.max(maxY, obj.center.y + obj.radius);
             }
         });
 
         return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+    },
+
+    // Create offset line from an existing line
+    offsetLine(line, distance) {
+        const angle = line.angle();
+        const perpAngle = angle + Math.PI / 2;
+
+        const offsetStart = {
+            x: line.start.x + Math.cos(perpAngle) * distance,
+            y: line.start.y + Math.sin(perpAngle) * distance
+        };
+
+        const offsetEnd = {
+            x: line.end.x + Math.cos(perpAngle) * distance,
+            y: line.end.y + Math.sin(perpAngle) * distance
+        };
+
+        return new Line(offsetStart, offsetEnd);
     }
 };
