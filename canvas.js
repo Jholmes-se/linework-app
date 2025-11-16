@@ -36,6 +36,7 @@ class DrawingCanvas {
         this.previewCircle = null;
         this.previewArc = null;
         this.previewOffsetLine = null;
+        this.previewSelectionBox = null;
 
         // Setup canvas
         this.resizeCanvas();
@@ -261,6 +262,90 @@ class DrawingCanvas {
         this.arcs.forEach(a => a.selected = false);
     }
 
+    selectInBox(minX, minY, maxX, maxY, addToSelection = false) {
+        if (!addToSelection) {
+            this.clearSelection();
+        }
+
+        // Select points within box
+        this.points.forEach(point => {
+            if (point.x >= minX && point.x <= maxX &&
+                point.y >= minY && point.y <= maxY) {
+                point.selected = true;
+            }
+        });
+
+        // Select lines with both endpoints in box
+        this.lines.forEach(line => {
+            const startIn = line.start.x >= minX && line.start.x <= maxX &&
+                           line.start.y >= minY && line.start.y <= maxY;
+            const endIn = line.end.x >= minX && line.end.x <= maxX &&
+                         line.end.y >= minY && line.end.y <= maxY;
+
+            if (startIn && endIn) {
+                line.selected = true;
+            }
+        });
+
+        // Select polylines with all points in box
+        this.polylines.forEach(polyline => {
+            const allPointsIn = polyline.points.every(point =>
+                point.x >= minX && point.x <= maxX &&
+                point.y >= minY && point.y <= maxY
+            );
+            if (allPointsIn) {
+                polyline.selected = true;
+            }
+        });
+
+        // Select rectangles within box
+        this.rectangles.forEach(rectangle => {
+            const rectMinX = rectangle.x;
+            const rectMaxX = rectangle.x + rectangle.width;
+            const rectMinY = rectangle.y;
+            const rectMaxY = rectangle.y + rectangle.height;
+
+            if (rectMinX >= minX && rectMaxX <= maxX &&
+                rectMinY >= minY && rectMaxY <= maxY) {
+                rectangle.selected = true;
+            }
+        });
+
+        // Select circles with center in box
+        this.circles.forEach(circle => {
+            const centerIn = circle.center.x >= minX && circle.center.x <= maxX &&
+                            circle.center.y >= minY && circle.center.y <= maxY;
+
+            if (centerIn) {
+                circle.selected = true;
+            }
+        });
+
+        // Select arcs with center in box
+        this.arcs.forEach(arc => {
+            const centerIn = arc.center.x >= minX && arc.center.x <= maxX &&
+                            arc.center.y >= minY && arc.center.y <= maxY;
+
+            if (centerIn) {
+                arc.selected = true;
+            }
+        });
+
+        // Select dimensions with both endpoints in box
+        this.dimensions.forEach(dimension => {
+            const startIn = dimension.start.x >= minX && dimension.start.x <= maxX &&
+                           dimension.start.y >= minY && dimension.start.y <= maxY;
+            const endIn = dimension.end.x >= minX && dimension.end.x <= maxX &&
+                         dimension.end.y >= minY && dimension.end.y <= maxY;
+
+            if (startIn && endIn) {
+                dimension.selected = true;
+            }
+        });
+
+        this.render();
+    }
+
     moveSelected(dx, dy) {
         this.points.forEach(point => {
             if (point.selected) {
@@ -428,6 +513,9 @@ class DrawingCanvas {
         }
         if (this.previewPoint) {
             this.drawPreviewPoint(this.previewPoint);
+        }
+        if (this.previewSelectionBox) {
+            this.drawSelectionBox(this.previewSelectionBox);
         }
 
         ctx.restore();
@@ -911,6 +999,28 @@ class DrawingCanvas {
         ctx.beginPath();
         ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
         ctx.fill();
+    }
+
+    drawSelectionBox(selectionBox) {
+        const ctx = this.ctx;
+        const start = this.worldToScreen(selectionBox.start.x, selectionBox.start.y);
+        const end = this.worldToScreen(selectionBox.end.x, selectionBox.end.y);
+
+        const x = Math.min(start.x, end.x);
+        const y = Math.min(start.y, end.y);
+        const width = Math.abs(end.x - start.x);
+        const height = Math.abs(end.y - start.y);
+
+        // Draw semi-transparent fill
+        ctx.fillStyle = 'rgba(74, 158, 255, 0.1)';
+        ctx.fillRect(x, y, width, height);
+
+        // Draw dashed border
+        ctx.strokeStyle = '#4a9eff';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(x, y, width, height);
+        ctx.setLineDash([]);
     }
 
     setStatus(text) {

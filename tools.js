@@ -98,6 +98,9 @@ class SelectTool extends Tool {
         this.dragging = false;
         this.panStart = null;
         this.panning = false;
+        this.selectionBoxStart = null;
+        this.selectionBoxEnd = null;
+        this.isDraggingObject = false;
     }
 
     onMouseDown(e) {
@@ -123,11 +126,16 @@ class SelectTool extends Tool {
             clickedObject.selected = true;
             this.dragStart = worldPos;
             this.dragging = true;
+            this.isDraggingObject = true;
         } else {
-            // Clear selection if clicking empty space
+            // Start selection box
             if (!e.ctrlKey && !e.metaKey) {
                 this.canvas.clearSelection();
             }
+            this.selectionBoxStart = worldPos;
+            this.selectionBoxEnd = worldPos;
+            this.dragging = false;
+            this.isDraggingObject = false;
         }
 
         this.canvas.render();
@@ -142,8 +150,21 @@ class SelectTool extends Tool {
             return;
         }
 
-        if (this.dragging && this.dragStart) {
-            const worldPos = this.canvas.screenToWorld(e.offsetX, e.offsetY);
+        const worldPos = this.canvas.screenToWorld(e.offsetX, e.offsetY);
+
+        // Dragging selection box
+        if (this.selectionBoxStart && !this.isDraggingObject) {
+            this.selectionBoxEnd = worldPos;
+            this.canvas.previewSelectionBox = {
+                start: this.selectionBoxStart,
+                end: this.selectionBoxEnd
+            };
+            this.canvas.render();
+            return;
+        }
+
+        // Dragging selected objects
+        if (this.dragging && this.dragStart && this.isDraggingObject) {
             const dx = worldPos.x - this.dragStart.x;
             const dy = worldPos.y - this.dragStart.y;
 
@@ -155,11 +176,36 @@ class SelectTool extends Tool {
     }
 
     onMouseUp(e) {
+        // Complete selection box
+        if (this.selectionBoxStart && this.selectionBoxEnd && !this.isDraggingObject) {
+            const minX = Math.min(this.selectionBoxStart.x, this.selectionBoxEnd.x);
+            const maxX = Math.max(this.selectionBoxStart.x, this.selectionBoxEnd.x);
+            const minY = Math.min(this.selectionBoxStart.y, this.selectionBoxEnd.y);
+            const maxY = Math.max(this.selectionBoxStart.y, this.selectionBoxEnd.y);
+
+            // Select all objects within the box
+            this.canvas.selectInBox(minX, minY, maxX, maxY, e.ctrlKey || e.metaKey);
+
+            this.selectionBoxStart = null;
+            this.selectionBoxEnd = null;
+            this.canvas.previewSelectionBox = null;
+            this.canvas.render();
+        }
+
         this.dragging = false;
+        this.isDraggingObject = false;
         this.dragStart = null;
         this.panning = false;
         this.panStart = null;
         this.canvas.canvas.style.cursor = 'default';
+    }
+
+    deactivate() {
+        super.deactivate();
+        this.selectionBoxStart = null;
+        this.selectionBoxEnd = null;
+        this.canvas.previewSelectionBox = null;
+        this.canvas.render();
     }
 }
 

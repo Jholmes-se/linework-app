@@ -186,12 +186,6 @@ button:active {
     overflow: hidden;
     background: #1a1a1a;
     display: flex;
-    margin-right: 280px;
-    transition: margin-right 0.3s ease;
-}
-
-#canvas-container.panel-collapsed {
-    margin-right: 0;
 }
 
 #mainCanvas {
@@ -205,119 +199,6 @@ button:active {
 
 #mainCanvas.grabbing {
     cursor: grabbing;
-}
-
-/* Properties Panel */
-#properties-panel {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 280px;
-    background: #2d2d2d;
-    border-left: 1px solid #3d3d3d;
-    overflow-y: auto;
-    transition: right 0.3s ease;
-    z-index: 100;
-}
-
-#properties-panel.collapsed {
-    right: -280px;
-}
-
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #3d3d3d;
-    background: #2d2d2d;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.panel-header h3 {
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0;
-    color: #e0e0e0;
-}
-
-#togglePanel {
-    padding: 6px 10px;
-    background: #3d3d3d;
-    color: #e0e0e0;
-    border: 1px solid #4d4d4d;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.2s;
-    min-width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    position: relative;
-}
-
-#togglePanel:hover {
-    background: #4d4d4d;
-}
-
-#togglePanel:active {
-    background: #5d5d5d;
-}
-
-#properties-panel.collapsed .panel-header {
-    position: fixed;
-    right: -248px;
-    top: 60px;
-    width: auto;
-    border: 1px solid #3d3d3d;
-    border-right: none;
-    border-radius: 4px 0 0 4px;
-    transition: right 0.3s ease;
-}
-
-#properties-panel.collapsed #togglePanel {
-    transform: rotate(180deg);
-}
-
-#propertiesContent {
-    padding: 16px;
-}
-
-.empty-state {
-    color: #888;
-    font-size: 13px;
-    font-style: italic;
-}
-
-.property-group {
-    margin-bottom: 16px;
-}
-
-.property-label {
-    font-size: 12px;
-    color: #aaa;
-    margin-bottom: 4px;
-    display: block;
-}
-
-.property-input {
-    width: 100%;
-    padding: 6px 8px;
-    background: #3d3d3d;
-    color: #e0e0e0;
-    border: 1px solid #4d4d4d;
-    border-radius: 3px;
-    font-size: 13px;
-}
-
-.property-input:focus {
-    outline: none;
-    border-color: #4a9eff;
 }
 
 /* Snap Indicators */

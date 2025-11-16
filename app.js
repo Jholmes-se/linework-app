@@ -120,43 +120,6 @@ class LineworkApp {
         document.getElementById('fileInput').addEventListener('change', (e) => {
             this.handleFileLoad(e);
         });
-
-        // Toggle panel
-        const toggleBtn = document.getElementById('togglePanel');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                console.log('Toggle button clicked');
-                this.togglePropertiesPanel();
-            });
-        } else {
-            console.error('Toggle panel button not found!');
-        }
-    }
-
-    togglePropertiesPanel() {
-        const panel = document.getElementById('properties-panel');
-        const canvasContainer = document.getElementById('canvas-container');
-
-        if (panel) {
-            console.log('Toggling panel, current state:', panel.classList.contains('collapsed'));
-            panel.classList.toggle('collapsed');
-
-            // Also toggle the canvas container class
-            if (canvasContainer) {
-                canvasContainer.classList.toggle('panel-collapsed');
-            }
-
-            console.log('Panel toggled, new state:', panel.classList.contains('collapsed'));
-
-            // Resize the canvas after the animation completes
-            setTimeout(() => {
-                if (this.canvas) {
-                    this.canvas.resizeCanvas();
-                }
-            }, 300); // Match the CSS transition duration
-        } else {
-            console.error('Properties panel not found!');
-        }
     }
 
     setTool(toolName) {
