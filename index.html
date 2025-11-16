@@ -45,6 +45,17 @@
                 <button class="tool-btn" data-tool="dimension" title="Add Dimension (D)">
                     <span>⟷</span> Dimension
                 </button>
+                <button class="tool-btn" data-tool="text" title="Add Text (T)">
+                    <span>T</span> Text
+                </button>
+            </div>
+
+            <div class="toolbar-section edit">
+                <button id="copyBtn" title="Copy (Ctrl/Cmd+C)">Copy</button>
+                <button id="pasteBtn" title="Paste (Ctrl/Cmd+V)">Paste</button>
+                <button id="rotateBtn" title="Rotate Selected">Rotate</button>
+                <button id="scaleBtn" title="Scale Selected">Scale</button>
+                <button id="mirrorBtn" title="Mirror Selected">Mirror</button>
             </div>
 
             <div class="toolbar-section options">
@@ -75,6 +86,8 @@
                     </div>
                 </div>
                 <button id="deleteSelected" title="Delete Selected (Delete)">Delete</button>
+                <button id="toggleProperties" title="Toggle Properties Panel (Ctrl/Cmd+P)">Properties</button>
+                <button id="toggleLayers" title="Toggle Layers Panel (Ctrl/Cmd+L)">Layers</button>
             </div>
         </div>
 
@@ -100,7 +113,33 @@
 
         <!-- Main Canvas Container -->
         <div id="canvas-container">
+            <!-- Properties Panel -->
+            <div id="properties-panel" class="side-panel left-panel" style="display: none;">
+                <div class="panel-header">
+                    <h3>Properties</h3>
+                    <button id="togglePropertiesPanel" class="panel-toggle">×</button>
+                </div>
+                <div id="propertiesContent" class="properties-content">
+                    <div class="no-selection">No object selected</div>
+                </div>
+            </div>
+
             <canvas id="mainCanvas"></canvas>
+
+            <!-- Layer Panel -->
+            <div id="layer-panel" class="side-panel">
+                <div class="panel-header">
+                    <h3>Layers</h3>
+                    <button id="toggleLayerPanel" class="panel-toggle">×</button>
+                </div>
+                <div class="panel-controls">
+                    <button id="newLayer" title="Create New Layer">+ New Layer</button>
+                    <button id="deleteLayer" title="Delete Selected Layer">Delete Layer</button>
+                </div>
+                <div id="layerList" class="layer-list">
+                    <!-- Layers will be dynamically populated here -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -108,6 +147,8 @@
     <input type="file" id="fileInput" accept=".json,.dxf" style="display: none;">
 
     <script src="geometry.js"></script>
+    <script src="layers.js"></script>
+    <script src="edit-operations.js"></script>
     <script src="export.js"></script>
     <script src="tools.js"></script>
     <script src="canvas.js"></script>

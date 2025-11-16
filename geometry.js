@@ -1,12 +1,13 @@
 // Geometry utility functions for linework calculations
 
 class Point {
-    constructor(x, y, id = null) {
+    constructor(x, y, id = null, layerId = null) {
         this.x = x;
         this.y = y;
         this.id = id || this.generateId();
         this.type = 'point';
         this.selected = false;
+        this.layerId = layerId;
     }
 
     generateId() {
@@ -23,12 +24,13 @@ class Point {
 }
 
 class Line {
-    constructor(start, end, id = null) {
+    constructor(start, end, id = null, layerId = null) {
         this.start = start; // Point object or {x, y}
         this.end = end;     // Point object or {x, y}
         this.id = id || this.generateId();
         this.type = 'line';
         this.selected = false;
+        this.layerId = layerId;
     }
 
     generateId() {
@@ -91,12 +93,13 @@ class Line {
 }
 
 class Polyline {
-    constructor(points = [], id = null) {
+    constructor(points = [], id = null, layerId = null) {
         this.points = points; // Array of Point objects or {x, y}
         this.id = id || this.generateId();
         this.type = 'polyline';
         this.selected = false;
         this.closed = false;
+        this.layerId = layerId;
     }
 
     generateId() {
@@ -130,13 +133,14 @@ class Polyline {
 }
 
 class Dimension {
-    constructor(start, end, offset = 20, id = null) {
+    constructor(start, end, offset = 20, id = null, layerId = null) {
         this.start = start;
         this.end = end;
         this.offset = offset; // Perpendicular offset from the line
         this.id = id || this.generateId();
         this.type = 'dimension';
         this.selected = false;
+        this.layerId = layerId;
     }
 
     generateId() {
@@ -152,12 +156,13 @@ class Dimension {
 }
 
 class Rectangle {
-    constructor(corner1, corner2, id = null) {
+    constructor(corner1, corner2, id = null, layerId = null) {
         this.corner1 = corner1; // {x, y}
         this.corner2 = corner2; // {x, y}
         this.id = id || this.generateId();
         this.type = 'rectangle';
         this.selected = false;
+        this.layerId = layerId;
     }
 
     generateId() {
@@ -197,12 +202,13 @@ class Rectangle {
 }
 
 class Circle {
-    constructor(center, radius, id = null) {
+    constructor(center, radius, id = null, layerId = null) {
         this.center = center; // {x, y}
         this.radius = radius;
         this.id = id || this.generateId();
         this.type = 'circle';
         this.selected = false;
+        this.layerId = layerId;
     }
 
     generateId() {
@@ -227,7 +233,7 @@ class Circle {
 }
 
 class Arc {
-    constructor(center, radius, startAngle, endAngle, id = null) {
+    constructor(center, radius, startAngle, endAngle, id = null, layerId = null) {
         this.center = center; // {x, y}
         this.radius = radius;
         this.startAngle = startAngle; // in radians
@@ -235,6 +241,7 @@ class Arc {
         this.id = id || this.generateId();
         this.type = 'arc';
         this.selected = false;
+        this.layerId = layerId;
     }
 
     generateId() {
@@ -242,7 +249,7 @@ class Arc {
     }
 
     // Create arc from three points
-    static fromThreePoints(p1, p2, p3, id = null) {
+    static fromThreePoints(p1, p2, p3, id = null, layerId = null) {
         // Calculate center using perpendicular bisectors
         const mid1 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
         const mid2 = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
@@ -269,7 +276,7 @@ class Arc {
         const startAngle = Math.atan2(p1.y - centerY, p1.x - centerX);
         const endAngle = Math.atan2(p3.y - centerY, p3.x - centerX);
 
-        return new Arc(center, radius, startAngle, endAngle, id);
+        return new Arc(center, radius, startAngle, endAngle, id, layerId);
     }
 
     arcLength() {
@@ -289,6 +296,37 @@ class Arc {
         return {
             x: this.center.x + this.radius * Math.cos(this.endAngle),
             y: this.center.y + this.radius * Math.sin(this.endAngle)
+        };
+    }
+}
+
+class Text {
+    constructor(position, content, fontSize = 16, id = null, layerId = null) {
+        this.position = position; // {x, y}
+        this.content = content;
+        this.fontSize = fontSize;
+        this.font = 'Arial';
+        this.color = '#ffffff';
+        this.alignment = 'left'; // left, center, right
+        this.id = id || this.generateId();
+        this.type = 'text';
+        this.selected = false;
+        this.layerId = layerId;
+    }
+
+    generateId() {
+        return 'text_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    getBounds(ctx) {
+        ctx.save();
+        ctx.font = `${this.fontSize}px ${this.font}`;
+        const metrics = ctx.measureText(this.content);
+        ctx.restore();
+
+        return {
+            width: metrics.width,
+            height: this.fontSize * 1.2 // Approximate height
         };
     }
 }

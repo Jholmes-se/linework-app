@@ -19,7 +19,8 @@ class ToolManager {
             arc: new ArcTool(this.canvas),
             offset: new OffsetTool(this.canvas),
             measure: new MeasureTool(this.canvas),
-            dimension: new DimensionTool(this.canvas)
+            dimension: new DimensionTool(this.canvas),
+            text: new TextTool(this.canvas)
         };
     }
 
@@ -217,7 +218,7 @@ class PointTool extends Tool {
         const worldPos = this.canvas.screenToWorld(e.offsetX, e.offsetY);
         const snapped = this.getSnappedPoint(worldPos);
 
-        const point = new Point(snapped.x, snapped.y);
+        const point = new Point(snapped.x, snapped.y, null, this.canvas.layerManager.activeLayerId);
         this.canvas.addPoint(point);
         this.canvas.render();
     }
@@ -253,7 +254,9 @@ class LineTool extends Tool {
         } else {
             const line = new Line(
                 { x: this.startPoint.x, y: this.startPoint.y },
-                { x: snapped.x, y: snapped.y }
+                { x: snapped.x, y: snapped.y },
+                null,
+                this.canvas.layerManager.activeLayerId
             );
             this.canvas.addLine(line);
             this.startPoint = null;
@@ -309,7 +312,7 @@ class PolylineTool extends Tool {
         this.points.push({ x: snapped.x, y: snapped.y });
 
         if (!this.currentPolyline) {
-            this.currentPolyline = new Polyline(this.points);
+            this.currentPolyline = new Polyline(this.points, null, this.canvas.layerManager.activeLayerId);
         }
 
         this.canvas.render();
@@ -456,7 +459,9 @@ class DimensionTool extends Tool {
             const dimension = new Dimension(
                 { x: this.startPoint.x, y: this.startPoint.y },
                 { x: snapped.x, y: snapped.y },
-                20 // Default offset
+                20, // Default offset
+                null,
+                this.canvas.layerManager.activeLayerId
             );
             this.canvas.addDimension(dimension);
             this.startPoint = null;
@@ -530,7 +535,9 @@ class RectangleTool extends Tool {
 
             const rectangle = new Rectangle(
                 { x: this.startPoint.x, y: this.startPoint.y },
-                { x: endPoint.x, y: endPoint.y }
+                { x: endPoint.x, y: endPoint.y },
+                null,
+                this.canvas.layerManager.activeLayerId
             );
             this.canvas.addRectangle(rectangle);
             this.startPoint = null;
@@ -604,7 +611,9 @@ class CircleTool extends Tool {
             const radius = Geometry.distance(this.centerPoint, snapped);
             const circle = new Circle(
                 { x: this.centerPoint.x, y: this.centerPoint.y },
-                radius
+                radius,
+                null,
+                this.canvas.layerManager.activeLayerId
             );
             this.canvas.addCircle(circle);
             this.centerPoint = null;
@@ -667,7 +676,7 @@ class ArcTool extends Tool {
         this.points.push(snapped);
 
         if (this.points.length === 3) {
-            const arc = Arc.fromThreePoints(this.points[0], this.points[1], this.points[2]);
+            const arc = Arc.fromThreePoints(this.points[0], this.points[1], this.points[2], null, this.canvas.layerManager.activeLayerId);
 
             if (arc) {
                 this.canvas.addArc(arc);
@@ -821,6 +830,60 @@ class OffsetTool extends Tool {
         this.selectedLine = null;
         this.canvas.previewOffsetLine = null;
         this.canvas.setStatus('Ready');
+        this.canvas.render();
+    }
+}
+
+// Text Tool - for placing text annotations
+class TextTool extends Tool {
+    constructor(canvas) {
+        super(canvas);
+        this.placementPoint = null;
+    }
+
+    onMouseDown(e) {
+        if (e.button !== 0) return;
+
+        const worldPos = this.canvas.screenToWorld(e.offsetX, e.offsetY);
+        const snapped = this.getSnappedPoint(worldPos);
+
+        // Prompt for text content
+        const content = prompt('Enter text:');
+        if (!content) return;
+
+        // Optional: prompt for font size
+        const fontSize = parseFloat(prompt('Enter font size (default 16):', '16'));
+        const validFontSize = isNaN(fontSize) ? 16 : fontSize;
+
+        const text = new Text(
+            { x: snapped.x, y: snapped.y },
+            content,
+            validFontSize,
+            null,
+            this.canvas.layerManager.activeLayerId
+        );
+
+        this.canvas.addText(text);
+        this.canvas.setStatus('Text added');
+        this.canvas.render();
+    }
+
+    onMouseMove(e) {
+        const worldPos = this.canvas.screenToWorld(e.offsetX, e.offsetY);
+        const snapped = this.getSnappedPoint(worldPos);
+
+        // Show preview text at cursor
+        this.canvas.previewText = new Text(
+            { x: snapped.x, y: snapped.y },
+            'ABC',
+            16
+        );
+        this.canvas.render();
+    }
+
+    deactivate() {
+        super.deactivate();
+        this.canvas.previewText = null;
         this.canvas.render();
     }
 }

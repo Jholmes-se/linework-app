@@ -5,6 +5,9 @@ class DrawingCanvas {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
 
+        // Layer management
+        this.layerManager = new LayerManager();
+
         // Drawing data
         this.points = [];
         this.lines = [];
@@ -13,6 +16,7 @@ class DrawingCanvas {
         this.rectangles = [];
         this.circles = [];
         this.arcs = [];
+        this.texts = [];
 
         // View transformation
         this.offsetX = 0;
@@ -37,6 +41,7 @@ class DrawingCanvas {
         this.previewArc = null;
         this.previewOffsetLine = null;
         this.previewSelectionBox = null;
+        this.previewText = null;
 
         // Setup canvas
         this.resizeCanvas();
@@ -249,6 +254,20 @@ class DrawingCanvas {
             }
         }
 
+        // Check texts
+        for (const text of this.texts) {
+            const bounds = text.getBounds(this.ctx);
+            const textMinX = text.position.x;
+            const textMaxX = text.position.x + bounds.width;
+            const textMinY = text.position.y - bounds.height;
+            const textMaxY = text.position.y;
+
+            if (worldPos.x >= textMinX && worldPos.x <= textMaxX &&
+                worldPos.y >= textMinY && worldPos.y <= textMaxY) {
+                return text;
+            }
+        }
+
         return null;
     }
 
@@ -260,6 +279,7 @@ class DrawingCanvas {
         this.rectangles.forEach(r => r.selected = false);
         this.circles.forEach(c => c.selected = false);
         this.arcs.forEach(a => a.selected = false);
+        this.texts.forEach(t => t.selected = false);
     }
 
     selectInBox(minX, minY, maxX, maxY, addToSelection = false) {
@@ -343,6 +363,14 @@ class DrawingCanvas {
             }
         });
 
+        // Select texts with position in box
+        this.texts.forEach(text => {
+            if (text.position.x >= minX && text.position.x <= maxX &&
+                text.position.y >= minY && text.position.y <= maxY) {
+                text.selected = true;
+            }
+        });
+
         this.render();
     }
 
@@ -403,6 +431,13 @@ class DrawingCanvas {
                 arc.center.y += dy;
             }
         });
+
+        this.texts.forEach(text => {
+            if (text.selected) {
+                text.position.x += dx;
+                text.position.y += dy;
+            }
+        });
     }
 
     deleteSelected() {
@@ -413,6 +448,7 @@ class DrawingCanvas {
         this.rectangles = this.rectangles.filter(r => !r.selected);
         this.circles = this.circles.filter(c => !c.selected);
         this.arcs = this.arcs.filter(a => !a.selected);
+        this.texts = this.texts.filter(t => !t.selected);
         this.render();
     }
 
@@ -445,6 +481,10 @@ class DrawingCanvas {
         this.arcs.push(arc);
     }
 
+    addText(text) {
+        this.texts.push(text);
+    }
+
     // Clear all
     clearAll() {
         this.points = [];
@@ -454,10 +494,18 @@ class DrawingCanvas {
         this.rectangles = [];
         this.circles = [];
         this.arcs = [];
+        this.texts = [];
         this.render();
     }
 
     // Rendering
+    // Check if object should be rendered based on layer visibility
+    isObjectVisible(obj) {
+        if (!obj.layerId) return true; // Objects without layers are always visible
+        const layer = this.layerManager.getLayer(obj.layerId);
+        return layer ? layer.visible : true;
+    }
+
     render() {
         const ctx = this.ctx;
         const width = this.canvas.width;
@@ -485,6 +533,7 @@ class DrawingCanvas {
         this.drawPolylines();
         this.drawDimensions();
         this.drawPoints();
+        this.drawTexts();
 
         // Draw preview objects
         if (this.previewRectangle) {
@@ -516,6 +565,9 @@ class DrawingCanvas {
         }
         if (this.previewSelectionBox) {
             this.drawSelectionBox(this.previewSelectionBox);
+        }
+        if (this.previewText) {
+            this.drawPreviewText(this.previewText);
         }
 
         ctx.restore();
@@ -583,7 +635,7 @@ class DrawingCanvas {
     drawPoints() {
         const ctx = this.ctx;
 
-        this.points.forEach(point => {
+        this.points.filter(p => this.isObjectVisible(p)).forEach(point => {
             const screen = this.worldToScreen(point.x, point.y);
 
             ctx.fillStyle = point.selected ? '#4a9eff' : '#ff4444';
@@ -607,7 +659,7 @@ class DrawingCanvas {
     drawLines() {
         const ctx = this.ctx;
 
-        this.lines.forEach(line => {
+        this.lines.filter(l => this.isObjectVisible(l)).forEach(line => {
             const start = this.worldToScreen(line.start.x, line.start.y);
             const end = this.worldToScreen(line.end.x, line.end.y);
 
@@ -631,7 +683,7 @@ class DrawingCanvas {
     drawPolylines() {
         const ctx = this.ctx;
 
-        this.polylines.forEach(polyline => {
+        this.polylines.filter(pl => this.isObjectVisible(pl)).forEach(polyline => {
             if (polyline.points.length < 2) return;
 
             ctx.strokeStyle = polyline.selected ? '#4a9eff' : '#ffffff';
@@ -666,7 +718,7 @@ class DrawingCanvas {
     drawDimensions() {
         const ctx = this.ctx;
 
-        this.dimensions.forEach(dimension => {
+        this.dimensions.filter(d => this.isObjectVisible(d)).forEach(dimension => {
             const start = this.worldToScreen(dimension.start.x, dimension.start.y);
             const end = this.worldToScreen(dimension.end.x, dimension.end.y);
 
@@ -832,7 +884,7 @@ class DrawingCanvas {
     drawRectangles() {
         const ctx = this.ctx;
 
-        this.rectangles.forEach(rectangle => {
+        this.rectangles.filter(r => this.isObjectVisible(r)).forEach(rectangle => {
             const topLeft = this.worldToScreen(rectangle.x, rectangle.y);
             const width = rectangle.width * this.zoom;
             const height = rectangle.height * this.zoom;
@@ -864,7 +916,7 @@ class DrawingCanvas {
     drawCircles() {
         const ctx = this.ctx;
 
-        this.circles.forEach(circle => {
+        this.circles.filter(c => this.isObjectVisible(c)).forEach(circle => {
             const center = this.worldToScreen(circle.center.x, circle.center.y);
             const radius = circle.radius * this.zoom;
 
@@ -896,7 +948,7 @@ class DrawingCanvas {
     drawArcs() {
         const ctx = this.ctx;
 
-        this.arcs.forEach(arc => {
+        this.arcs.filter(a => this.isObjectVisible(a)).forEach(arc => {
             const center = this.worldToScreen(arc.center.x, arc.center.y);
             const radius = arc.radius * this.zoom;
 
@@ -1021,6 +1073,55 @@ class DrawingCanvas {
         ctx.setLineDash([5, 5]);
         ctx.strokeRect(x, y, width, height);
         ctx.setLineDash([]);
+    }
+
+    drawTexts() {
+        const ctx = this.ctx;
+
+        this.texts.filter(t => this.isObjectVisible(t)).forEach(text => {
+            const screen = this.worldToScreen(text.position.x, text.position.y);
+
+            ctx.save();
+            ctx.font = `${text.fontSize * this.zoom}px ${text.font}`;
+            ctx.fillStyle = text.selected ? '#4a9eff' : text.color;
+            ctx.textAlign = text.alignment;
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(text.content, screen.x, screen.y);
+
+            // Draw selection box if selected
+            if (text.selected) {
+                const metrics = ctx.measureText(text.content);
+                const width = metrics.width;
+                const height = text.fontSize * this.zoom * 1.2;
+
+                let boxX = screen.x;
+                if (text.alignment === 'center') {
+                    boxX -= width / 2;
+                } else if (text.alignment === 'right') {
+                    boxX -= width;
+                }
+
+                ctx.strokeStyle = '#4a9eff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(boxX, screen.y - height, width, height);
+            }
+
+            ctx.restore();
+        });
+    }
+
+    drawPreviewText(text) {
+        const ctx = this.ctx;
+        const screen = this.worldToScreen(text.position.x, text.position.y);
+
+        ctx.save();
+        ctx.font = `${text.fontSize * this.zoom}px ${text.font}`;
+        ctx.fillStyle = '#4a9eff';
+        ctx.textAlign = text.alignment;
+        ctx.textBaseline = 'bottom';
+        ctx.globalAlpha = 0.7;
+        ctx.fillText(text.content, screen.x, screen.y);
+        ctx.restore();
     }
 
     setStatus(text) {
