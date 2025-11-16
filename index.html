@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linework - Site Planning Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Toolbar -->
+        <div id="toolbar">
+            <div class="toolbar-section">
+                <h1>Linework</h1>
+            </div>
+
+            <div class="toolbar-section tools">
+                <button class="tool-btn active" data-tool="select" title="Select/Move (V)">
+                    <span>⬚</span> Select
+                </button>
+                <button class="tool-btn" data-tool="point" title="Place Point (P)">
+                    <span>●</span> Point
+                </button>
+                <button class="tool-btn" data-tool="line" title="Draw Line (L)">
+                    <span>╱</span> Line
+                </button>
+                <button class="tool-btn" data-tool="polyline" title="Draw Polyline (Shift+L)">
+                    <span>⌇</span> Polyline
+                </button>
+                <button class="tool-btn" data-tool="measure" title="Measure Distance (M)">
+                    <span>↔</span> Measure
+                </button>
+                <button class="tool-btn" data-tool="dimension" title="Add Dimension (D)">
+                    <span>⟷</span> Dimension
+                </button>
+            </div>
+
+            <div class="toolbar-section options">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="snapToGrid" checked>
+                    Snap to Grid
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="snapToPoints" checked>
+                    Snap to Points
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showGrid" checked>
+                    Show Grid
+                </label>
+            </div>
+
+            <div class="toolbar-section actions">
+                <button id="newProject" title="New Project">New</button>
+                <button id="saveProject" title="Save Project">Save</button>
+                <button id="loadProject" title="Load Project">Load</button>
+                <div class="dropdown">
+                    <button id="exportBtn" title="Export">Export ▼</button>
+                    <div class="dropdown-content">
+                        <a href="#" id="exportDXF">Export DXF</a>
+                        <a href="#" id="exportCSV">Export CSV (Points)</a>
+                        <a href="#" id="exportSVG">Export SVG</a>
+                    </div>
+                </div>
+                <button id="deleteSelected" title="Delete Selected (Delete)">Delete</button>
+            </div>
+        </div>
+
+        <!-- Info Bar -->
+        <div id="infobar">
+            <div class="info-item">
+                <span>Cursor: </span>
+                <span id="cursorCoords">X: 0.00, Y: 0.00</span>
+            </div>
+            <div class="info-item">
+                <span>Zoom: </span>
+                <span id="zoomLevel">100%</span>
+            </div>
+            <div class="info-item">
+                <span>Grid: </span>
+                <input type="number" id="gridSize" value="10" min="1" max="100" step="1">
+                <span>units</span>
+            </div>
+            <div class="info-item">
+                <span id="statusText">Ready</span>
+            </div>
+        </div>
+
+        <!-- Main Canvas Container -->
+        <div id="canvas-container">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+
+        <!-- Properties Panel -->
+        <div id="properties-panel">
+            <h3>Properties</h3>
+            <div id="propertiesContent">
+                <p class="empty-state">Select an object to edit properties</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for loading projects -->
+    <input type="file" id="fileInput" accept=".json,.dxf" style="display: none;">
+
+    <script src="geometry.js"></script>
+    <script src="export.js"></script>
+    <script src="tools.js"></script>
+    <script src="canvas.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

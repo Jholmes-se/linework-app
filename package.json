@@ -1,0 +1,18 @@
+{
+  "name": "linework",
+  "version": "1.0.0",
+  "description": "Site planning and linework application",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx http-server -p 8000 -o",
+    "start": "npx http-server -p 8000"
+  },
+  "keywords": [
+    "cad",
+    "site-planning",
+    "linework",
+    "drawing"
+  ],
+  "author": "",
+  "license": "MIT"
+}
